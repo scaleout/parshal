@@ -1,0 +1,49 @@
+= Parshal
+A lightweight wrapper for Marshal.
+
+Parshal allows partially marshalling objects via accessor methods.
+
+== Prerequisites
+* Ruby 1.8 or later
+* activesupport
+#
+== Synopsys
+ class A
+   include Parshal
+   attr_accessor :x, :y, :z, :b
+   attr_accessor :p, :q
+ 
+   parshal :x, :y, :z, :b   # ignores :p and :q
+ end
+ 
+ class B
+   include Parshal
+   attr_accessor :m, :n
+ 
+   parshal :m, :n
+ end
+ 
+ a = A.new
+ a.x = :x
+ a.y = 1
+ a.z = {:hoge => :hage}
+ a.p = :unused
+ a.q = :unused
+ 
+ b = B.new
+ b.m = 'm'
+ b.n = [1, 2, 3]
+ a.b = b
+ 
+ a = Parshal.load(Parshal.dump(a))
+ p a
+#
+
+== Copyright
+:Author
+  Yugui (Yuki Sonoda)  <yugui@yugui.jp>
+:Copyright
+  Copyright (c) 2009 Yugui (Yuki Sonoda).
+:License
+  MIT license
+
