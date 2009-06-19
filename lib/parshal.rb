@@ -32,9 +32,21 @@ module Parshal
     end
   end
 
+  module OverrideMethodsForActiveRecord
+    def parshal_initialize
+      initialize
+    end
+  end
+
   def self.included(klass)
     klass.extend(ClassMethods)
     klass.class_inheritable_array(:parshalled_attributes)
+
+    if defined?(ActiveRecord::Base)
+      if klass < ActiveRecord::Base
+        klass.__send__(:include, OverrideMethodsForActiveRecord)
+      end
+    end
   end
 
   def parshal_initialize; end
