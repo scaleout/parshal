@@ -9,32 +9,35 @@
 
 require 'active_support'
 
-module Parshal
-  Dump = Struct.new(:serialized)
+# a namespace, which provides partial marshaling.
+module Parshallable
+  VERSION = "0.0.2"
 
+  # holds class methods
   module ClassMethods
     def parshal(*names)
       self.parshalled_attributes ||= []
       self.parshalled_attributes += names
-    end
-
-    def parshal_load(attributes)
-      obj = self.allocate
-      obj.__send__(:parshal_initialize)
-      attributes.each do |name, value|
-        if value.kind_of?(Dump)
-          obj.__send__("#{name}=", Parshal.load(value.serialized))
-        else
-          obj.__send__("#{name}=", value)
-        end
-      end
-      return obj
     end
   end
 
   module OverrideMethodsForActiveRecord
     def parshal_initialize
       initialize
+    end
+    def marshal_dump_with_new_record
+      attrs = marshal_dump_without_new_record
+      attrs[:@new_record] = new_record?
+      attrs
+    end
+    def marshal_load_with_new_record(attrs)
+      new_record = attrs.delete(:@new_record)
+      marshal_load_without_new_record(attrs)
+      @new_record = new_record
+    end
+    def self.included(model)
+      model.send(:alias_method_chain, :marshal_load, :new_record)
+      model.send(:alias_method_chain, :marshal_dump, :new_record)
     end
   end
 
@@ -51,24 +54,19 @@ module Parshal
 
   def parshal_initialize; end
 
-  def parshal_dump
+  def marshal_load(attributes)
+    self.__send__(:parshal_initialize)
+    attributes.each do |name, value|
+      self.__send__("#{name}=", value)
+    end
+  end
+
+  def marshal_dump
     attributes = {}
     self.class.parshalled_attributes.each do |name|
       value = self.__send__(name)
-      if value.kind_of?(Parshal)
-        attributes[name] = Dump.new(Parshal.dump(value))
-      else
-        attributes[name] = value
-      end
+      attributes[name] = value
     end
     return attributes
-  end
-
-  def self.load(dump)
-    klass, attributes = Marshal.load(dump)
-    klass.parshal_load(attributes)
-  end
-  def self.dump(obj)
-    Marshal.dump([obj.class, obj.parshal_dump])
   end
 end

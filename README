@@ -6,10 +6,10 @@ Parshal allows partially marshalling objects via accessor methods.
 == Prerequisites
 * Ruby 1.8 or later
 * activesupport
-#
+
 == Synopsys
  class A
-   include Parshal
+   include Parshallable
    attr_accessor :x, :y, :z, :b
    attr_accessor :p, :q
  
@@ -17,7 +17,7 @@ Parshal allows partially marshalling objects via accessor methods.
  end
  
  class B
-   include Parshal
+   include Parshallable
    attr_accessor :m, :n
  
    parshal :m, :n
@@ -35,9 +35,9 @@ Parshal allows partially marshalling objects via accessor methods.
  b.n = [1, 2, 3]
  a.b = b
  
- a = Parshal.load(Parshal.dump(a))
+ a = Marshal.load(Marshal.dump(a))
  p a
-#
+
 
 == Copyright
 :Author
@@ -46,4 +46,3 @@ Parshal allows partially marshalling objects via accessor methods.
   Copyright (c) 2009 Yugui (Yuki Sonoda).
 :License
   MIT license
-
